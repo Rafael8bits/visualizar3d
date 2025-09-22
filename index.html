@@ -63,12 +63,12 @@
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.physicallyCorrectLights = true;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;  // Exposição alta para clarear
+    renderer.toneMappingExposure = 1;  // Exposição alta para clarear
     renderer.shadowMap.enabled = false;   // Desativa sombras
     document.body.appendChild(renderer.domElement);
 
     // Fundo branco e ambiente neutro
-    scene.background = new THREE.Color(ffffff);
+    scene.background = new THREE.Color(000000);
     scene.environment = new THREE.CubeTextureLoader().load([
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
@@ -186,5 +186,6 @@
 </body>
 
 </html>
+
 
 
