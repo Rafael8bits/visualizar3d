@@ -106,7 +106,7 @@
     const errorElement = document.getElementById('error');
 
     loader.load(
-      './CalcitaPancakeBase.glb',
+      './CalcitaPancakeBase.gltf',
       (gltf) => {
         gltf.scene.traverse((child) => {
           if (child.isMesh) {
@@ -184,4 +184,5 @@
     animate();
   </script>
 </body>
+
 </html>
