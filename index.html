@@ -145,10 +145,10 @@
     // Interface de Controle para Ajustes
     const gui = new GUI();
     const params = {
-      exposure: 1.8,
-      ambient: 2.0,
-      directional: 3.0,
-      fillLight: 1.5
+      exposure: 1.2,
+      ambient: 0.7,
+      directional:0,
+      fillLight: 0.2
     };
 
     gui.add(params, 'exposure', 0.5, 4).name('Exposição').onChange(v => {
@@ -186,3 +186,4 @@
 </body>
 
 </html>
+
