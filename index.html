@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Galeria 3D</title>
 
+  <!-- ✅ IMPORT MAP (ESSENCIAL) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.module.js"
+    }
+  }
+  </script>
+
   <style>
     body { margin:0; font-family:Arial; background:#f5f5f5; }
 
@@ -77,27 +86,21 @@
 <div id="loading">Carregando...</div>
 
 <script type="module">
-window.onerror = function(msg, url, line, col, error) {
-  document.body.innerHTML += `<pre style="color:red">${msg}</pre>`;
-};
-/* =========================
-   CONFIGURAÇÃO BASE (IMPORTANTE)
-========================= */
-const BASE_PATH = "/visualizar3d/"; // <- ALTERE AQUI
 
 /* =========================
-   IMPORTS (CDN CORRETA)
+   CONFIG
 ========================= */
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.module.js';
+const BASE_PATH = "/visualizar3d/";
+
+/* =========================
+   IMPORTS
+========================= */
+import * as THREE from 'three';
 
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/controls/OrbitControls.js';
-
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/loaders/GLTFLoader.js';
-
 import { DRACOLoader } from 'https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/loaders/DRACOLoader.js';
-
 import { RGBELoader } from 'https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/loaders/RGBELoader.js';
-
 
 /* =========================
    MODELOS
@@ -107,26 +110,19 @@ const modelos = [
     nome: "Calcita",
     arquivo: BASE_PATH + "CalcitaPancakeBase.gltf",
     thumb: BASE_PATH + "thumbs/calcita.jpg"
-  },
-  {
-    nome: "Modelo 2",
-    arquivo: BASE_PATH + "modelo2.gltf",
-    thumb: BASE_PATH + "thumbs/modelo2.jpg"
   }
 ];
 
-
 /* =========================
-   ELEMENTOS DOM
+   DOM
 ========================= */
 const home = document.getElementById('home');
 const viewer = document.getElementById('viewer');
 const backBtn = document.getElementById('backBtn');
 const loading = document.getElementById('loading');
 
-
 /* =========================
-   HOME (CARDS)
+   CARDS
 ========================= */
 modelos.forEach((m,i)=>{
   const card = document.createElement('div');
@@ -136,9 +132,8 @@ modelos.forEach((m,i)=>{
   home.appendChild(card);
 });
 
-
 /* =========================
-   THREE.JS CORE
+   THREE CORE
 ========================= */
 let scene, camera, renderer, controls;
 let currentModels = [];
@@ -147,13 +142,7 @@ function initViewer(){
 
   scene = new THREE.Scene();
 
-  camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth/window.innerHeight,
-    0.1,
-    1000
-  );
-
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
   camera.position.set(0,1.5,3);
 
   renderer = new THREE.WebGLRenderer({ antialias:true });
@@ -169,7 +158,6 @@ function initViewer(){
 
   controls = new OrbitControls(camera, renderer.domElement);
 
-  /* HDRI (com fallback seguro) */
   const pmrem = new THREE.PMREMGenerator(renderer);
 
   new RGBELoader().load(
@@ -180,8 +168,8 @@ function initViewer(){
       scene.background = new THREE.Color(0x808080);
     },
     undefined,
-    () => {
-      console.warn("HDRI falhou, usando fallback.");
+    ()=>{
+      console.warn("HDRI falhou (ok)");
       scene.background = new THREE.Color(0x808080);
     }
   );
@@ -189,9 +177,8 @@ function initViewer(){
   animate();
 }
 
-
 /* =========================
-   AUTO FRAME
+   FRAME
 ========================= */
 function frameObject(obj){
   const box = new THREE.Box3().setFromObject(obj);
@@ -200,13 +187,11 @@ function frameObject(obj){
 
   camera.position.copy(center);
   camera.position.z += size.length();
-
   controls.target.copy(center);
 }
 
-
 /* =========================
-   CARREGAR MODELO
+   LOAD MODEL
 ========================= */
 function abrirModelo(index){
 
@@ -228,7 +213,6 @@ function abrirModelo(index){
     modelos[index].arquivo,
 
     (gltf)=>{
-
       const model = gltf.scene;
 
       model.traverse((c)=>{
@@ -245,14 +229,12 @@ function abrirModelo(index){
       currentModels.push(model);
 
       frameObject(model);
-
       loading.style.display='none';
     },
 
     (xhr)=>{
       if(xhr.total){
-        const p = (xhr.loaded/xhr.total*100).toFixed(0);
-        loading.innerText = `Carregando ${p}%`;
+        loading.innerText = `Carregando ${(xhr.loaded/xhr.total*100).toFixed(0)}%`;
       }
     },
 
@@ -263,16 +245,14 @@ function abrirModelo(index){
   );
 }
 
-
 /* =========================
-   VOLTAR
+   BACK
 ========================= */
 backBtn.onclick = ()=>{
   viewer.style.display='none';
   home.style.display='flex';
   backBtn.style.display='none';
 };
-
 
 /* =========================
    LOOP
@@ -282,7 +262,6 @@ function animate(){
   if(controls) controls.update();
   if(renderer) renderer.render(scene,camera);
 }
-
 
 /* =========================
    RESIZE
