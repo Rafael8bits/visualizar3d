@@ -77,7 +77,9 @@
 <div id="loading">Carregando...</div>
 
 <script type="module">
-
+window.onerror = function(msg, url, line, col, error) {
+  document.body.innerHTML += `<pre style="color:red">${msg}</pre>`;
+};
 /* =========================
    CONFIGURAÇÃO BASE (IMPORTANTE)
 ========================= */
