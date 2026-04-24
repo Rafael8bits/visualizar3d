@@ -208,40 +208,26 @@ function abrirModelo(index){
 
   loader.load(
     modelos[index].arquivo,
-
     (gltf) => {
       const model = gltf.scene;
-
-      /* // Bloco comentado corretamente:
-      model.traverse((c) => {
-        if(c.isMesh){
-          c.material.metalness = 0.0;
-          c.material.roughness = 0.2;
-        }
-      });
-      */
-
       model.position.x = currentModels.length * 2;
-
       scene.add(model);
       currentModels.push(model);
-
       frameObject(model);
       loading.style.display = 'none';
     },
-
     (xhr) => {
       if(xhr.total){
         loading.innerText = `Carregando ${(xhr.loaded / xhr.total * 100).toFixed(0)}%`;
       }
     },
-
     (err) => {
       console.error(err);
       loading.innerText = "Erro ao carregar modelo";
     }
   );
-}
+} // <--- ESTA CHAVE ESTAVA FALTANDO!
+
 /* =========================
    BACK
 ========================= */
@@ -250,7 +236,6 @@ backBtn.onclick = ()=>{
   home.style.display='flex';
   backBtn.style.display='none';
 
-  // Limpa os modelos da cena para não acumular
   currentModels.forEach(model => scene.remove(model));
   currentModels = [];
 };
