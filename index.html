@@ -181,6 +181,7 @@ function initViewer(){
   renderer.outputEncoding = THREE.sRGBEncoding; // Importante para cores corretas
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0; // Reduzido (HDR costuma exigir mais)
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limita a resolução ao dobro do padrão, evitando excessos em telas 4K de celular
 
   viewer.appendChild(renderer.domElement);
 
