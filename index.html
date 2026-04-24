@@ -209,16 +209,17 @@ function abrirModelo(index){
   loader.load(
     modelos[index].arquivo,
 
-    (gltf)=>{
+    (gltf) => {
       const model = gltf.scene;
 
-     /* model.traverse((c)=>{
+      /* // Bloco comentado corretamente:
+      model.traverse((c) => {
         if(c.isMesh){
           c.material.metalness = 0.0;
           c.material.roughness = 0.2;
-          c.material.envMapIntensity = 1.5;
-        
-      });*/
+        }
+      });
+      */
 
       model.position.x = currentModels.length * 2;
 
@@ -226,21 +227,20 @@ function abrirModelo(index){
       currentModels.push(model);
 
       frameObject(model);
-      loading.style.display='none';
+      loading.style.display = 'none';
     },
 
-    (xhr)=>{
+    (xhr) => {
       if(xhr.total){
-        loading.innerText = `Carregando ${(xhr.loaded/xhr.total*100).toFixed(0)}%`;
+        loading.innerText = `Carregando ${(xhr.loaded / xhr.total * 100).toFixed(0)}%`;
       }
     },
 
-    (err)=>{
+    (err) => {
       console.error(err);
       loading.innerText = "Erro ao carregar modelo";
     }
   );
-}
 
 /* =========================
    BACK
