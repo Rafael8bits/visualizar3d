@@ -151,6 +151,7 @@ function initViewer(){
   renderer.physicallyCorrectLights = true;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.5;
+  renderer.outputEncoding = THREE.sRGBEncoding;
 
   viewer.appendChild(renderer.domElement);
 
@@ -216,12 +217,12 @@ function abrirModelo(index){
     (gltf)=>{
       const model = gltf.scene;
 
-      model.traverse((c)=>{
+     /* model.traverse((c)=>{
         if(c.isMesh){
           c.material.metalness = 0.0;
           c.material.roughness = 0.2;
           c.material.envMapIntensity = 1.5;
-        }
+        }*/
       });
 
       model.position.x = currentModels.length * 2;
@@ -253,8 +254,11 @@ backBtn.onclick = ()=>{
   viewer.style.display='none';
   home.style.display='flex';
   backBtn.style.display='none';
-};
 
+  // Limpa os modelos da cena para não acumular
+  currentModels.forEach(model => scene.remove(model));
+  currentModels = [];
+};
 /* =========================
    LOOP
 ========================= */
