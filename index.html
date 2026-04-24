@@ -257,12 +257,21 @@ function abrirModelo(index){
 /* =========================
    BACK
 ========================= */
-backBtn.onclick = ()=>{
-  viewer.style.display='none';
-  home.style.display='flex';
-  backBtn.style.display='none';
+backBtn.onclick = () => {
+  viewer.style.display = 'none';
+  home.style.display = 'flex';
+  backBtn.style.display = 'none';
 
-  currentModels.forEach(model => scene.remove(model));
+  currentModels.forEach(model => {
+    model.traverse((node) => {
+      if (node.isMesh) {
+        node.geometry.dispose(); // Limpa a geometria
+        if (node.material.map) node.material.map.dispose(); // Limpa as texturas
+        node.material.dispose(); // Limpa o material
+      }
+    });
+    scene.remove(model);
+  });
   currentModels = [];
 };
 /* =========================
