@@ -38,7 +38,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'; // Importação necessária
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 
 THREE.Cache.enabled = true;
 
@@ -60,7 +60,6 @@ const loading = document.getElementById('loading');
 let scene, camera, renderer, controls;
 let currentModels = [];
 
-// Configuração do DRACOLoader (Global para reutilização)
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
 
@@ -75,21 +74,24 @@ modelos.forEach((m,i)=>{
 function initViewer() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x808080);
+  
+  // Afastamos a posição da câmera no eixo Z de 3 para 5, diminuindo o zoom inicial
   camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-  camera.position.set(0,1.5,3);
+  camera.position.set(0, 1.5, 5);
   
   renderer = new THREE.WebGLRenderer({ antialias:false, powerPreference: 'high-performance' });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   viewer.appendChild(renderer.domElement);
   
-  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-  /*const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  directionalLight.position.set(5, 10, 7.5);
-  scene.add(directionalLight);*/
+  // Mantemos apenas a luz ambiente para preservar as cores reais do modelo
+  scene.add(new THREE.AmbientLight(0xffffff, 1.0));
 
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; // Suaviza o movimento da câmera
+  controls.enableDamping = true;
+  controls.target.set(0, 1.0, 0); // Define o ponto focal padrão do controle
+  controls.update();
+  
   animate();
 }
 
@@ -101,7 +103,7 @@ function abrirModelo(index) {
   loading.style.display = 'block';
 
   const loader = new GLTFLoader();
-  loader.setDRACOLoader(dracoLoader); // Vincula o decodificador ao loader
+  loader.setDRACOLoader(dracoLoader);
 
   loader.load(
     modelos[index].arquivo,
@@ -119,7 +121,7 @@ function abrirModelo(index) {
     },
     (error) => {
       console.error(error);
-      loading.innerText = 'Erro ao carregar modelo';
+      loading.innerText = 'Erro ao carregar';
     }
   );
 }
