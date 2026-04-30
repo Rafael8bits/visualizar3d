@@ -23,7 +23,7 @@
     .card p { margin:10px; text-align:center; }
     #viewer { display:none; width:100vw; height:100vh; }
     #backBtn { position:fixed; top:20px; left:20px; z-index:10; padding:10px; background:white; border:none; border-radius:5px; cursor:pointer; }
-    #loading { position:fixed; top:20px; right:20px; background:white; padding:10px; border-radius:5px; display:none; font-family: sans-serif; font-weight: bold; }
+    #loading { position:fixed; top:20px; right:20px; background:white; padding:10px; border-radius:5px; display:none; font-weight: bold; }
   </style>
 </head>
 
@@ -36,11 +36,11 @@
 
 <script type="module">
 import * as THREE from 'three';
-import { Cache } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'; // Importação necessária
 
-Cache.enabled = true;
+THREE.Cache.enabled = true;
 
 const BASE_PATH = "./";
 const modelos = [
@@ -59,6 +59,10 @@ const loading = document.getElementById('loading');
 
 let scene, camera, renderer, controls;
 let currentModels = [];
+
+// Configuração do DRACOLoader (Global para reutilização)
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
 
 modelos.forEach((m,i)=>{
   const card = document.createElement('div');
@@ -79,14 +83,13 @@ function initViewer() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   viewer.appendChild(renderer.domElement);
   
-  // Iluminação
   scene.add(new THREE.AmbientLight(0xffffff, 0.6));
   const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
   directionalLight.position.set(5, 10, 7.5);
   scene.add(directionalLight);
 
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.update();
+  controls.enableDamping = true; // Suaviza o movimento da câmera
   animate();
 }
 
@@ -95,11 +98,11 @@ function abrirModelo(index) {
   home.style.display = 'none';
   viewer.style.display = 'block';
   backBtn.style.display = 'block';
-  
   loading.style.display = 'block';
-  loading.innerText = 'Carregando 0%';
 
   const loader = new GLTFLoader();
+  loader.setDRACOLoader(dracoLoader); // Vincula o decodificador ao loader
+
   loader.load(
     modelos[index].arquivo,
     (gltf) => {
@@ -110,13 +113,13 @@ function abrirModelo(index) {
     },
     (xhr) => {
       if (xhr.lengthComputable) {
-        const percentComplete = Math.round((xhr.loaded / xhr.total) * 100);
-        loading.innerText = `Carregando ${percentComplete}%`;
+        const percent = Math.round((xhr.loaded / xhr.total) * 100);
+        loading.innerText = `Carregando ${percent}%`;
       }
     },
     (error) => {
-      console.error('Erro ao carregar o modelo:', error);
-      loading.innerText = 'Erro ao carregar';
+      console.error(error);
+      loading.innerText = 'Erro ao carregar modelo';
     }
   );
 }
@@ -126,14 +129,10 @@ backBtn.onclick = () => {
     m.traverse(n => { 
       if (n.isMesh) { 
         n.geometry.dispose(); 
-        
-        // Limpeza profunda de materiais e texturas
         const materiais = Array.isArray(n.material) ? n.material : [n.material];
         materiais.forEach(mat => {
           for (const key in mat) {
-            if (mat[key] && mat[key].isTexture) {
-              mat[key].dispose();
-            }
+            if (mat[key] && mat[key].isTexture) mat[key].dispose();
           }
           mat.dispose();
         });
@@ -143,7 +142,6 @@ backBtn.onclick = () => {
   });
   
   if (renderer) renderer.renderLists.dispose();
-  
   currentModels = [];
   viewer.style.display = 'none';
   home.style.display = 'flex';
@@ -153,8 +151,8 @@ backBtn.onclick = () => {
 function animate() {
   requestAnimationFrame(animate);
   if (renderer) { 
-    renderer.render(scene, camera); 
     controls.update(); 
+    renderer.render(scene, camera); 
   }
 }
 
