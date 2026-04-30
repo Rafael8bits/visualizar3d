@@ -4,6 +4,308 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Galeria 3D</title>
+
+  <!-- ✅ IMPORT MAP (ESSENCIAL) -->
+  <script type="importmap">
+ {
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.module.js",
+    "three/": "https://cdn.jsdelivr.net/npm/three@0.136.0/"
+  }
+}
+  </script>
+
+  <style>
+    body { margin:0; font-family:Arial; background:#f5f5f5; }
+
+    #home {
+      display:flex;
+      flex-wrap:wrap;
+      gap:20px;
+      padding:20px;
+      justify-content:center;
+    }
+
+    .card {
+      width:220px;
+      background:white;
+      border-radius:10px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.1);
+      cursor:pointer;
+      overflow:hidden;
+      transition:0.2s;
+    }
+
+    .card:hover { transform:scale(1.05); }
+
+    .card img {
+      width:100%;
+      height:140px;
+      object-fit:cover;
+    }
+
+    .card p {
+      margin:10px;
+      text-align:center;
+    }
+
+    #viewer {
+      display:none;
+      width:100vw;
+      height:100vh;
+    }
+
+    #backBtn {
+      position:fixed;
+      top:20px;
+      left:20px;
+      z-index:10;
+      padding:10px;
+      background:white;
+      border:none;
+      border-radius:5px;
+      cursor:pointer;
+    }
+
+    #loading {
+      position:fixed;
+      top:20px;
+      right:20px;
+      background:white;
+      padding:10px;
+      border-radius:5px;
+      display:none;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="home"></div>
+<div id="viewer"></div>
+<button id="backBtn" style="display:none;">Voltar</button>
+<div id="loading">Carregando...</div>
+
+<script type="module">
+
+/* =========================
+   CONFIG
+========================= */
+const BASE_PATH = "./";
+
+/* =========================
+   IMPORTS
+========================= */
+import * as THREE from 'three';
+import { Cache } from 'three'; // Adicionado para controle de cache
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/loaders/DRACOLoader.js';
+
+Cache.enabled = false; // Desativa cache do Three para economizar RAM
+
+/* =========================
+   MODELOS
+========================= */
+ const modelos = [
+
+  {
+    nome: "Calcita",
+    arquivo: BASE_PATH + "calcita/CalcitaPancakeBase.gltf",
+    thumb: BASE_PATH + "thumbs/Calcita.png"
+  },
+ {
+    nome: "GipsitaSelenita Lente 50mm",
+    arquivo: BASE_PATH + "GipsitaSelenita50mm.glb",
+    thumb: BASE_PATH + "thumbs/GipsitaSelenita.png"
+  },
+{
+    nome: "GipsitaSelenita Lente 105mm",
+    arquivo: BASE_PATH + "GipsitaSelenita105mm.glb",
+    thumb: BASE_PATH + "thumbs/GipsitaSelenita.png"
+  },
+{
+    nome: "Calcita Maclada Lente 50mm",
+    arquivo: BASE_PATH + "CalcitaMaclada50mm.glb",
+    thumb: BASE_PATH + "thumbs/CalcitaMaclada.png"
+  },
+{
+    nome: "Calcita Maclada Lente 105mm",
+    arquivo: BASE_PATH + "CalcitaMaclada105mm.glb",
+    thumb: BASE_PATH + "thumbs/CalcitaMaclada.png"
+  },
+{
+    nome: "Afloramento de Barita Lente 50mm",
+    arquivo: BASE_PATH + "Barita50mm.glb",
+    thumb: BASE_PATH + "thumbs/Barita.png"
+  },
+]; 
+
+/* =========================
+   DOM
+========================= */
+const home = document.getElementById('home');
+const viewer = document.getElementById('viewer');
+const backBtn = document.getElementById('backBtn');
+const loading = document.getElementById('loading');
+
+/* =========================
+   CARDS
+========================= */
+modelos.forEach((m,i)=>{
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<img src="${m.thumb}"><p>${m.nome}</p>`;
+  card.onclick = () => abrirModelo(i);
+  home.appendChild(card);
+});
+
+/* =========================
+   THREE CORE
+========================= */
+let scene, camera, renderer, controls;
+let currentModels = [];
+
+function initViewer(){
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x808080);
+
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.set(0,1.5,3);
+
+  // Otimização: antialias false para performance mobile
+  renderer = new THREE.WebGLRenderer({ antialias:false, powerPreference: 'high-performance' });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  
+  renderer.physicallyCorrectLights = true;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  // Otimização: limite de pixel ratio para 1.5
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+
+  viewer.appendChild(renderer.domElement);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 1.0);
+  scene.add(ambient);
+
+  const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  sunLight.position.set(5, 10, 7.5);
+  scene.add(sunLight);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+
+  animate();
+}
+
+function limparCena() {
+  currentModels.forEach(model => {
+    model.traverse((node) => {
+      if (node.isMesh) {
+        node.geometry.dispose();
+        if (node.material.map) node.material.map.dispose();
+        node.material.dispose();
+      }
+    });
+    scene.remove(model);
+  });
+  currentModels = [];
+}
+
+/* =========================
+   FRAME
+========================= */
+function frameObject(obj){
+  const box = new THREE.Box3().setFromObject(obj);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+
+  camera.position.copy(center);
+  camera.position.z += size.length();
+  controls.target.copy(center);
+}
+
+/* =========================
+   LOAD MODEL
+========================= */
+function abrirModelo(index){
+  limparCena(); // Adicionado para garantir limpeza antes de carregar novo
+
+  home.style.display='none';
+  viewer.style.display='block';
+  backBtn.style.display='block';
+
+  if(!renderer) initViewer();
+
+  loading.style.display='block';
+
+  const draco = new DRACOLoader();
+  draco.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+
+  const loader = new GLTFLoader();
+  loader.setDRACOLoader(draco);
+
+  loader.load(
+    modelos[index].arquivo,
+    (gltf) => {
+      const model = gltf.scene;
+      // Removido o deslocamento (model.position.x) para focar apenas em 1 modelo
+      scene.add(model);
+      currentModels.push(model);
+      frameObject(model);
+      loading.style.display = 'none';
+    },
+    (xhr) => {
+      if(xhr.total){
+        loading.innerText = `Carregando ${(xhr.loaded / xhr.total * 100).toFixed(0)}%`;
+      }
+    },
+    (err) => {
+      console.error(err);
+      loading.innerText = "Erro ao carregar modelo";
+    }
+  );
+}
+
+/* =========================
+   BACK
+========================= */
+backBtn.onclick = () => {
+  viewer.style.display = 'none';
+  home.style.display = 'flex';
+  backBtn.style.display = 'none';
+
+  limparCena();
+};
+
+/* =========================
+   LOOP
+========================= */
+function animate(){
+  requestAnimationFrame(animate);
+  if(controls) controls.update();
+  if(renderer) renderer.render(scene,camera);
+}
+
+/* =========================
+   RESIZE
+========================= */
+window.addEventListener('resize',()=>{
+  if(!camera) return;
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Galeria 3D</title>
   <script type="importmap">
   {
     "imports": {
