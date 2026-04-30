@@ -1,297 +1,412 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Galeria 3D</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Galeria 3D Mobile Optimized</title>
 
-  <!-- ✅ IMPORT MAP (ESSENCIAL) -->
-  <script type="importmap">
- {
+<script type="importmap">
+{
   "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.136.0/build/three.module.js",
     "three/": "https://cdn.jsdelivr.net/npm/three@0.136.0/"
   }
 }
-  </script>
+</script>
 
-  <style>
-    body { margin:0; font-family:Arial; background:#f5f5f5; }
+<style>
+*{
+  box-sizing:border-box;
+}
 
-    #home {
-      display:flex;
-      flex-wrap:wrap;
-      gap:20px;
-      padding:20px;
-      justify-content:center;
-    }
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#f5f5f5;
+}
 
-    .card {
-      width:220px;
-      background:white;
-      border-radius:10px;
-      box-shadow:0 4px 10px rgba(0,0,0,0.1);
-      cursor:pointer;
-      overflow:hidden;
-      transition:0.2s;
-    }
+#home{
+  display:flex;
+  flex-wrap:wrap;
+  gap:16px;
+  padding:16px;
+  justify-content:center;
+}
 
-    .card:hover { transform:scale(1.05); }
+.card{
+  width:210px;
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 4px 12px rgba(0,0,0,.08);
+  cursor:pointer;
+  transition:.2s;
+}
 
-    .card img {
-      width:100%;
-      height:140px;
-      object-fit:cover;
-    }
+.card:hover{
+  transform:scale(1.03);
+}
 
-    .card p {
-      margin:10px;
-      text-align:center;
-    }
+.card img{
+  width:100%;
+  height:140px;
+  object-fit:cover;
+  display:block;
+}
 
-    #viewer {
-      display:none;
-      width:100vw;
-      height:100vh;
-    }
+.card p{
+  margin:12px;
+  text-align:center;
+  font-size:15px;
+}
 
-    #backBtn {
-      position:fixed;
-      top:20px;
-      left:20px;
-      z-index:10;
-      padding:10px;
-      background:white;
-      border:none;
-      border-radius:5px;
-      cursor:pointer;
-    }
+#viewer{
+  display:none;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+}
 
-    #loading {
-      position:fixed;
-      top:20px;
-      right:20px;
-      background:white;
-      padding:10px;
-      border-radius:5px;
-      display:none;
-    }
-  </style>
+#backBtn{
+  position:fixed;
+  top:16px;
+  left:16px;
+  z-index:10;
+  padding:10px 14px;
+  border:none;
+  border-radius:8px;
+  background:#fff;
+  cursor:pointer;
+  display:none;
+  box-shadow:0 4px 12px rgba(0,0,0,.15);
+}
+
+#loading{
+  position:fixed;
+  top:16px;
+  right:16px;
+  z-index:10;
+  background:#fff;
+  padding:10px 14px;
+  border-radius:8px;
+  display:none;
+  box-shadow:0 4px 12px rgba(0,0,0,.15);
+}
+</style>
 </head>
 
 <body>
 
 <div id="home"></div>
 <div id="viewer"></div>
-<button id="backBtn" style="display:none;">Voltar</button>
+<button id="backBtn">Voltar</button>
 <div id="loading">Carregando...</div>
 
 <script type="module">
 
-/* =========================
-   CONFIG
-========================= */
-const BASE_PATH = "./";
-
-/* =========================
-   IMPORTS
-========================= */
 import * as THREE from 'three';
 
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/loaders/DRACOLoader.js';
-import { RGBELoader } from 'https://cdn.jsdelivr.net/npm/three@0.136.0/examples/jsm/loaders/RGBELoader.js';
 
-/* =========================
-   MODELOS
-========================= */
- const modelos = [
+/* ======================
+CONFIG
+====================== */
+const BASE_PATH = "./";
+const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-  {
-    nome: "Calcita",
-    arquivo: BASE_PATH + "calcita/CalcitaPancakeBase.gltf",
-    thumb: BASE_PATH + "thumbs/Calcita.png"
-  },
- {
-    nome: "GipsitaSelenita Lente 50mm",
-    arquivo: BASE_PATH + "GipsitaSelenita50mm.glb",
-    thumb: BASE_PATH + "thumbs/GipsitaSelenita.png"
-  },
+/* ======================
+MODELOS
+====================== */
+const modelos = [
 {
-    nome: "GipsitaSelenita Lente 105mm",
-    arquivo: BASE_PATH + "GipsitaSelenita105mm.glb",
-    thumb: BASE_PATH + "thumbs/GipsitaSelenita.png"
-  },
+  nome:"Calcita",
+  arquivo:BASE_PATH + "calcita/CalcitaPancakeBase.gltf",
+  thumb:BASE_PATH + "thumbs/Calcita.png"
+},
 {
-    nome: "Calcita Maclada Lente 50mm",
-    arquivo: BASE_PATH + "CalcitaMaclada50mm.glb",
-    thumb: BASE_PATH + "thumbs/CalcitaMaclada.png"
-  },
+  nome:"GipsitaSelenita 50mm",
+  arquivo:BASE_PATH + "GipsitaSelenita50mm.glb",
+  thumb:BASE_PATH + "thumbs/GipsitaSelenita.png"
+},
 {
-    nome: "Calcita Maclada Lente 105mm",
-    arquivo: BASE_PATH + "CalcitaMaclada105mm.glb",
-    thumb: BASE_PATH + "thumbs/CalcitaMaclada.png"
-  },
+  nome:"GipsitaSelenita 105mm",
+  arquivo:BASE_PATH + "GipsitaSelenita105mm.glb",
+  thumb:BASE_PATH + "thumbs/GipsitaSelenita.png"
+},
 {
-    nome: "Afloramento de Barita Lente 50mm",
-    arquivo: BASE_PATH + "Barita50mm.glb",
-    thumb: BASE_PATH + "thumbs/Barita.png"
-  },
-]; 
+  nome:"Calcita Maclada 50mm",
+  arquivo:BASE_PATH + "CalcitaMaclada50mm.glb",
+  thumb:BASE_PATH + "thumbs/CalcitaMaclada.png"
+},
+{
+  nome:"Calcita Maclada 105mm",
+  arquivo:BASE_PATH + "CalcitaMaclada105mm.glb",
+  thumb:BASE_PATH + "thumbs/CalcitaMaclada.png"
+},
+{
+  nome:"Barita 50mm",
+  arquivo:BASE_PATH + "Barita50mm.glb",
+  thumb:BASE_PATH + "thumbs/Barita.png"
+}
+];
 
-/* =========================
-   DOM
-========================= */
-const home = document.getElementById('home');
-const viewer = document.getElementById('viewer');
-const backBtn = document.getElementById('backBtn');
-const loading = document.getElementById('loading');
+/* ======================
+DOM
+====================== */
+const home = document.getElementById("home");
+const viewer = document.getElementById("viewer");
+const backBtn = document.getElementById("backBtn");
+const loading = document.getElementById("loading");
 
-/* =========================
-   CARDS
-========================= */
+/* ======================
+CARDS
+====================== */
 modelos.forEach((m,i)=>{
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.innerHTML = `<img src="${m.thumb}"><p>${m.nome}</p>`;
-  card.onclick = () => abrirModelo(i);
+  const card = document.createElement("div");
+  card.className = "card";
+
+  card.innerHTML = `
+    <img loading="lazy" src="${m.thumb}">
+    <p>${m.nome}</p>
+  `;
+
+  card.onclick = ()=>abrirModelo(i);
   home.appendChild(card);
 });
 
-/* =========================
-   THREE CORE
-========================= */
-let scene, camera, renderer, controls;
-let currentModels = [];
+/* ======================
+THREE GLOBAL
+====================== */
+let scene;
+let camera;
+let renderer;
+let controls;
+let currentModel = null;
 
+/* ======================
+LOADERS (reutilizados)
+====================== */
+const draco = new DRACOLoader();
+draco.setDecoderPath(
+'https://www.gstatic.com/draco/versioned/decoders/1.5.6/'
+);
+
+const loader = new GLTFLoader();
+loader.setDRACOLoader(draco);
+
+/* ======================
+INIT VIEWER
+====================== */
 function initViewer(){
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x808080); // Cor de fundo sólida
+  scene.background = new THREE.Color(0x808080);
 
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera = new THREE.PerspectiveCamera(
+    60,
+    window.innerWidth/window.innerHeight,
+    0.1,
+    1000
+  );
+
   camera.position.set(0,1.5,3);
 
-  renderer = new THREE.WebGLRenderer({ antialias:true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  
-  // Ajustes de renderização para luzes comuns
-  renderer.physicallyCorrectLights = true;
-  renderer.outputEncoding = THREE.sRGBEncoding; // Importante para cores corretas
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0; // Reduzido (HDR costuma exigir mais)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limita a resolução ao dobro do padrão, evitando excessos em telas 4K de celular
+  renderer = new THREE.WebGLRenderer({
+    antialias:false,
+    powerPreference:"high-performance"
+  });
+
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.physicallyCorrectLights = false;
+  renderer.toneMapping = THREE.NoToneMapping;
+
+  renderer.setPixelRatio(
+    isMobile ? 1 : Math.min(window.devicePixelRatio, 1.5)
+  );
+
+  const scale = isMobile ? 0.85 : 1;
+
+  renderer.setSize(
+    window.innerWidth * scale,
+    window.innerHeight * scale
+  );
 
   viewer.appendChild(renderer.domElement);
 
-  // 1. Luz Ambiente (Ilumina tudo uniformemente)
-  const ambient = new THREE.AmbientLight(0xffffff, 1.0);
+  /* Luz simples */
+  const ambient = new THREE.AmbientLight(0xffffff, 1.2);
   scene.add(ambient);
 
-  // 2. Luz Direcional (Simula o sol ou uma luminária de estúdio, cria sombras e brilho)
-  const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
-  sunLight.position.set(5, 10, 7.5);
-  scene.add(sunLight);
+  const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+  dir.position.set(3,5,4);
+  scene.add(dir);
 
   controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = false;
+  controls.enablePan = false;
 
-  // Removido: PMREMGenerator e RGBELoader
+  controls.addEventListener("change", render);
 
-  animate();
+  render();
 }
 
-/* =========================
-   FRAME
-========================= */
+/* ======================
+RENDER SOB DEMANDA
+====================== */
+function render(){
+  if(renderer && scene && camera){
+    renderer.render(scene,camera);
+  }
+}
+
+/* ======================
+FRAME MODEL
+====================== */
 function frameObject(obj){
+
   const box = new THREE.Box3().setFromObject(obj);
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
 
-  camera.position.copy(center);
-  camera.position.z += size.length();
+  const maxDim = Math.max(size.x,size.y,size.z);
+  const distance = maxDim * 2.2;
+
+  camera.position.set(
+    center.x,
+    center.y,
+    center.z + distance
+  );
+
   controls.target.copy(center);
+  controls.update();
+
+  render();
 }
 
-/* =========================
-   LOAD MODEL
-========================= */
+/* ======================
+LIMPAR MODELO
+====================== */
+function clearCurrentModel(){
+
+  if(!currentModel) return;
+
+  currentModel.traverse(node=>{
+
+    if(node.isMesh){
+
+      if(node.geometry){
+        node.geometry.dispose();
+      }
+
+      if(Array.isArray(node.material)){
+
+        node.material.forEach(mat=>disposeMaterial(mat));
+
+      }else if(node.material){
+
+        disposeMaterial(node.material);
+      }
+    }
+  });
+
+  scene.remove(currentModel);
+  currentModel = null;
+}
+
+function disposeMaterial(mat){
+
+  if(mat.map) mat.map.dispose();
+  if(mat.normalMap) mat.normalMap.dispose();
+  if(mat.roughnessMap) mat.roughnessMap.dispose();
+  if(mat.metalnessMap) mat.metalnessMap.dispose();
+  if(mat.aoMap) mat.aoMap.dispose();
+  if(mat.emissiveMap) mat.emissiveMap.dispose();
+  if(mat.envMap) mat.envMap.dispose();
+
+  mat.dispose();
+}
+
+/* ======================
+ABRIR MODELO
+====================== */
 function abrirModelo(index){
 
-  home.style.display='none';
-  viewer.style.display='block';
-  backBtn.style.display='block';
+  home.style.display = "none";
+  viewer.style.display = "block";
+  backBtn.style.display = "block";
+  loading.style.display = "block";
+  loading.innerText = "Carregando...";
 
-  if(!renderer) initViewer();
+  if(!renderer){
+    initViewer();
+  }
 
-  loading.style.display='block';
-
-  const draco = new DRACOLoader();
-  draco.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-
-  const loader = new GLTFLoader();
-  loader.setDRACOLoader(draco);
+  clearCurrentModel();
 
   loader.load(
+
     modelos[index].arquivo,
-    (gltf) => {
-      const model = gltf.scene;
-      model.position.x = currentModels.length * 2;
-      scene.add(model);
-      currentModels.push(model);
-      frameObject(model);
-      loading.style.display = 'none';
+
+    (gltf)=>{
+
+      currentModel = gltf.scene;
+      scene.add(currentModel);
+
+      frameObject(currentModel);
+
+      loading.style.display = "none";
     },
-    (xhr) => {
+
+    (xhr)=>{
+
       if(xhr.total){
-        loading.innerText = `Carregando ${(xhr.loaded / xhr.total * 100).toFixed(0)}%`;
+        const pct = (xhr.loaded/xhr.total)*100;
+        loading.innerText =
+        "Carregando " + pct.toFixed(0) + "%";
       }
     },
-    (err) => {
+
+    (err)=>{
       console.error(err);
-      loading.innerText = "Erro ao carregar modelo";
+      loading.innerText = "Erro ao carregar";
     }
   );
-} // <--- ESTA CHAVE ESTAVA FALTANDO!
-
-/* =========================
-   BACK
-========================= */
-backBtn.onclick = () => {
-  viewer.style.display = 'none';
-  home.style.display = 'flex';
-  backBtn.style.display = 'none';
-
-  currentModels.forEach(model => {
-    model.traverse((node) => {
-      if (node.isMesh) {
-        node.geometry.dispose(); // Limpa a geometria
-        if (node.material.map) node.material.map.dispose(); // Limpa as texturas
-        node.material.dispose(); // Limpa o material
-      }
-    });
-    scene.remove(model);
-  });
-  currentModels = [];
-};
-/* =========================
-   LOOP
-========================= */
-function animate(){
-  requestAnimationFrame(animate);
-  if(controls) controls.update();
-  if(renderer) renderer.render(scene,camera);
 }
 
-/* =========================
-   RESIZE
-========================= */
-window.addEventListener('resize',()=>{
-  if(!camera) return;
-  camera.aspect = window.innerWidth/window.innerHeight;
+/* ======================
+VOLTAR
+====================== */
+backBtn.onclick = ()=>{
+
+  clearCurrentModel();
+
+  viewer.style.display = "none";
+  home.style.display = "flex";
+  backBtn.style.display = "none";
+};
+
+/* ======================
+RESIZE
+====================== */
+window.addEventListener("resize", ()=>{
+
+  if(!camera || !renderer) return;
+
+  camera.aspect =
+  window.innerWidth/window.innerHeight;
+
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scale = isMobile ? 0.85 : 1;
+
+  renderer.setSize(
+    window.innerWidth * scale,
+    window.innerHeight * scale
+  );
+
+  render();
 });
 
 </script>
