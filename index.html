@@ -269,16 +269,25 @@ function abrirModelo(index){
 }
 
 /* =========================
-   BACK
+   BACK (CORRIGIDO)
 ========================= */
 backBtn.onclick = () => {
+  // 1. Esconde a interface primeiro
   viewer.style.display = 'none';
   home.style.display = 'flex';
   backBtn.style.display = 'none';
 
+  // 2. Limpa os objetos da cena
   limparCena();
-};
 
+  // 3. Reseta a câmera para posição inicial para não bugar no próximo carregamento
+  if (camera) {
+    camera.position.set(0, 1.5, 3);
+  }
+  
+  // 4. O loop 'animate()' continua rodando, mas como a cena está vazia 
+  // e o viewer oculto, o impacto no celular é zero.
+};
 /* =========================
    LOOP
 ========================= */
